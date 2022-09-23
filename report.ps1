@@ -9,7 +9,7 @@ $E3 = $E5 = $E5Sec = $AADP2 = 0
 $currentUTCtime = (Get-Date).ToUniversalTime()
 $startDate = $currentUTCtime.AddDays(-30)
 $outfile = "C:\temp\{0}-LynxReport{1}.csv" -f $tpidInput,$currentUTCtime.tostring("dd-MM-yyyy-hh-mm-ss")  
-$newcsv = {} | Select-Object "Customer","OrgName","Tenant","ID","IsGov", "E3", "E5", "E5 Sec", "AADP2","MDO-U","MDE-U","AADP2-U"| Export-Csv $outfile
+$newcsv = {} | Select-Object "Customer","OrgName","Tenant","ID","IsGov", "E3", "E5", "E5 Sec","MDCA","MDI","AADP2","MDO-U","MDE-U","AADP2-U"| Export-Csv $outfile
 $csvfile = Import-Csv $outfile
 
 
@@ -89,6 +89,8 @@ foreach ($cxtenant in $tenants.Results.Document){
                 {
                     'MICROSOFT 365 E3' { $E3 = $lic.IncludedQuantity   }
                     'OFFICE 365 G3 GCC' { $E3 = $lic.IncludedQuantity   }
+                    'MICROSOFT DEFENDER FOR CLOUD APPS' { $MDCA = $lic.IncludedQuantity   }
+                    'MICROSOFT DEFENDER FOR IDENTITY' { $MDI = $lic.IncludedQuantity   }
                     'AZURE ACTIVE DIRECTORY PREMIUM P2'{ $AADP2 = $lic.IncludedQuantity     }
                     'AZURE ACTIVE DIRECTORY PREMIUM P2 FOR GOVERNMENT'{ $AADP2 = $lic.IncludedQuantity     }
                     'MICROSOFT 365 E5' { $E5 = $lic.IncludedQuantity   }
@@ -101,6 +103,8 @@ foreach ($cxtenant in $tenants.Results.Document){
     $csvfile.E3 = $E3
     $csvfile.E5 = $E5
     $csvfile.'E5 Sec' = $E5Sec
+    $csvfile.MDCA = $MDCA
+    $csvfile.MDI = $MDI
     $csvfile.AADP2 = $AADP2
 
     $1 = get-usagestats -tenantID $cxtenant.OmsTenantId -bearerToken $bearer_token -et "Device" -startDate $startDate -enddate $currentUTCtime -workload "MDATP"
