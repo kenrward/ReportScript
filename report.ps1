@@ -4,6 +4,8 @@ Param (
 )
 
 $ids = Get-Content $tpidInput
+$currentUTCtime = (Get-Date).ToUniversalTime()
+$startDate = $currentUTCtime.AddDays(-30)
 
 $outfileC = "C:\temp\Consolidated-LynxReport{0}.csv" -f $currentUTCtime.tostring("dd-MM-yyyy-hh-mm-ss")  
 $newcsv = {} | Select-Object "Customer","TPID","OrgName","Tenant","ID","IsGov", "E3", "E5", "E5 Sec","MDCA","MDI","AADP2","MDO-U","MDE-U","MDCA-U","MDI-U","AADP2-U"| Export-Csv $outfileC
@@ -13,8 +15,6 @@ $csvfileC = Import-Csv $outfileC
         Write-Host "TPID: $id------------------------------------------------------------"
         $et = $workload = ""
         $E3 = $E5 = $E5Sec = $AADP2 = $MDCA = $MDI = $MDATPAverage = $OATPAverage = $AADPAverage = 0
-        $currentUTCtime = (Get-Date).ToUniversalTime()
-        $startDate = $currentUTCtime.AddDays(-30)
         $outfile = "C:\temp\{0}-LynxReport{1}.csv" -f $id,$currentUTCtime.tostring("dd-MM-yyyy-hh-mm-ss")  
         $newcsv = {} | Select-Object "Customer","OrgName","Tenant","ID","IsGov", "E3", "E5", "E5 Sec","MDCA","MDI","AADP2","MDO-U","MDE-U","MDCA-U","MDI-U","AADP2-U"| Export-Csv $outfile
         $csvfile = Import-Csv $outfile
@@ -93,18 +93,31 @@ $csvfileC = Import-Csv $outfileC
             # Extract Licensing Data
             foreach($lic in $tenLics){
                 if($lic.StateName = "Active" -and $lic.SubscriptionEndDate -gt  $currentUTCtime){
-                    switch ( $lic.OfferProductName )
+                    switch -wildcard ( $lic.OfferProductName )
                         {
-                            'MICROSOFT 365 E3' { $E3 = $lic.IncludedQuantity   }
-                            'OFFICE 365 G3 GCC' { $E3 = $lic.IncludedQuantity   }
-                            'MICROSOFT DEFENDER FOR CLOUD APPS' { $MDCA = $lic.IncludedQuantity   }
-                            'MICROSOFT DEFENDER FOR IDENTITY' { $MDI = $lic.IncludedQuantity   }
-                            'AZURE ACTIVE DIRECTORY PREMIUM P2'{ $AADP2 = $lic.IncludedQuantity     }
-                            'AZURE ACTIVE DIRECTORY PREMIUM P2 FOR GOVERNMENT'{ $AADP2 = $lic.IncludedQuantity     }
-                            'MICROSOFT 365 E5' { $E5 = $lic.IncludedQuantity   }
-                            'OFFICE 365 G5 GCC' { $E5 = $lic.IncludedQuantity   }
-                            'MICROSOFT 365 E5 SECURITY'{ $E5Sec = $lic.IncludedQuantity     }
-                            'ENTERPRISE MOBILITY + SECURITY G5 GCC'{ $E5Sec = $lic.IncludedQuantity     }
+                            '* 365 *3*' { $E3 += $lic.IncludedQuantity   }
+                            '* 365 *5*' { $E5 += $lic.IncludedQuantity   }
+                            'ENTERPRISE MOBILITY + SECURITY*'{ $E5Sec += $lic.IncludedQuantity     }
+                            'MICROSOFT DEFENDER FOR CLOUD APPS*' { $MDCA += $lic.IncludedQuantity   }
+                            'MICROSOFT DEFENDER FOR IDENTITY*' { $MDI += $lic.IncludedQuantity   }
+                            'AZURE ACTIVE DIRECTORY PREMIUM P2*'{ $AADP2 += $lic.IncludedQuantity     }
+                            #'MICROSOFT 365 E3' { $E3 += $lic.IncludedQuantity   }
+                            #'OFFICE 365 G3 GCC' { $E3 += $lic.IncludedQuantity   }
+                            #'MICROSOFT 365 G3 GCC' { $E3 += $lic.IncludedQuantity   }
+                            #'OFFICE 365 E3 - DOD' { $E3 += $lic.IncludedQuantity   }
+                            #'OFFICE 365 E3 - GCCHIGH' { $E3 += $lic.IncludedQuantity   }
+                            #'AZURE ACTIVE DIRECTORY PREMIUM P2'{ $AADP2 += $lic.IncludedQuantity     }
+                            #'AZURE ACTIVE DIRECTORY PREMIUM P2 FOR GOVERNMENT'{ $AADP2 += $lic.IncludedQuantity     }
+                            #'AZURE ACTIVE DIRECTORY PREMIUM P2 - DOD'{ $AADP2 += $lic.IncludedQuantity     }
+                            #'AZURE ACTIVE DIRECTORY PREMIUM P2 - GCCHIGH'{ $AADP2 += $lic.IncludedQuantity     }
+                            #'MICROSOFT 365 E5' { $E5 += $lic.IncludedQuantity   }
+                            #'OFFICE 365 G5 GCC' { $E5 += $lic.IncludedQuantity   }
+                            #'OFFICE 365 G5 - DOD' { $E5 += $lic.IncludedQuantity   }
+                            #'MICROSOFT 365 G5 SECURITY GCC' { $E5 += $lic.IncludedQuantity   }
+                            #'MICROSOFT 365 E5 SECURITY'{ $E5Sec += $lic.IncludedQuantity     }
+                            #'ENTERPRISE MOBILITY + SECURITY E5 - DOD'{ $E5Sec += $lic.IncludedQuantity     }
+                            #'ENTERPRISE MOBILITY + SECURITY G5 GCC'{ $E5Sec += $lic.IncludedQuantity     }
+                            #'ENTERPRISE MOBILITY + SECURITY E3 - GCCHIGH'{ $E5Sec += $lic.IncludedQuantity     }
                         }
                 }
             }
