@@ -18,12 +18,9 @@ $csvfileC = Import-Csv $outfileC
         $outfile = "C:\temp\{0}-LynxReport{1}.csv" -f $id,$currentUTCtime.tostring("dd-MM-yyyy-hh-mm-ss")  
         $newcsv = {} | Select-Object "Customer","OrgName","Tenant","ID","IsGov", "E3", "E5", "E5 Sec","MDCA","MDI","AADP2","MDO-U","MDE-U","MDCA-U","MDI-U","AADP2-U"| Export-Csv $outfile
         $csvfile = Import-Csv $outfile
-        
-        
         function get-licenses($tenantID, $bearerToken){
         $method = "GET"
         $headers = @{Authorization = "Bearer $bearer_token"} 
-            
         $url = "https://lynx.office.net/api/LynxStorage/TenantSubscriptions?statusFilters%5B%5D%3DActive&omsTenantId={0}&includeInformationWorkerSubscriptions=false" -f $tenantID
         
         $resLic = Invoke-RestMethod -Uri $url -Method $method -Headers $headers 
@@ -34,11 +31,7 @@ $csvfileC = Import-Csv $outfileC
         
         function get-tenants($tpid, $bearerToken){
             $method = "POST"
-            
             $headers = @{Authorization = "Bearer $bearer_token"}     
-            # $urlt = "https://lynx.office.net/api/LynxStorage/Customer?tpid={0}&PageSize=25" -f $tpid
-        
-        
             $tpidarray = @($tpid) 
         
             $payload = @{
@@ -47,16 +40,11 @@ $csvfileC = Import-Csv $outfileC
             }
         
             $payload = $payload | ConvertTo-Json
-        
-        
-        
             $urlt = "https://lynx.office.net/api/Search/Tenants?SearchTerm=*"
             $resTenants = Invoke-RestMethod -uri $urlt -Method $method -Headers $headers -Body $payload -ContentType "application/json"
-            return $resTenants
-            
+            return $resTenants 
             }
             
-        
         function get-usagestats ($tenantID, $bearerToken, $workload, $et, $startDate, $enddate){
             $method = "GET"
             $headers = @{Authorization = "Bearer $bearerToken"} 
@@ -72,7 +60,6 @@ $csvfileC = Import-Csv $outfileC
             }
         
         }
-        
         #
         # Customer Name and Tenants
         $tenants = get-tenants -tpid $id -bearerToken $bearer_token
@@ -142,7 +129,6 @@ $csvfileC = Import-Csv $outfileC
 
         $cleanFileC =  Import-Csv $outfileC | Where-Object 'Customer' -ne ''
         $cleanFileC | Export-Csv $outfileC
-
         
 }
 
