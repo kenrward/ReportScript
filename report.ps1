@@ -8,7 +8,7 @@ $currentUTCtime = (Get-Date).ToUniversalTime()
 $startDate = $currentUTCtime.AddDays(-30)
 
 $outfileC = "C:\temp\Consolidated-LynxReport{0}.csv" -f $currentUTCtime.tostring("dd-MM-yyyy-hh-mm-ss")  
-$newcsv = {} | Select-Object "Customer","TPID","OrgName","Tenant","ID","IsGov", "E3", "E5", "E5 Sec","MDCA","MDI","AADP2","MDO-U","MDE-U","MDCA-U","MDI-U","AADP2-U"| Export-Csv $outfileC
+$newcsv = {} | Select-Object "Customer","TPID","OrgName","Tenant","ID","IsGov", "E3", "E5", "E5 Sec","MDCA","MDI","AADP2","MDO-U","MDE-U","MDCA-U","MDI-U","AADP2-U","MDO-%",",MDE-%"| Export-Csv $outfileC
 $csvfileC = Import-Csv $outfileC
 
     foreach($id in $ids){
@@ -16,7 +16,7 @@ $csvfileC = Import-Csv $outfileC
         $et = $workload = ""
         $E3 = $E5 = $E5Sec = $AADP2 = $MDCA = $MDI = $MDATPAverage = $OATPAverage = $AADPAverage = 0
         $outfile = "C:\temp\{0}-LynxReport{1}.csv" -f $id,$currentUTCtime.tostring("dd-MM-yyyy-hh-mm-ss")  
-        $newcsv = {} | Select-Object "Customer","OrgName","Tenant","ID","IsGov", "E3", "E5", "E5 Sec","MDCA","MDI","AADP2","MDO-U","MDE-U","MDCA-U","MDI-U","AADP2-U"| Export-Csv $outfile
+        $newcsv = {} | Select-Object "Customer","OrgName","Tenant","ID","IsGov", "E3", "E5", "E5 Sec","MDCA","MDI","AADP2","MDO-U","MDE-U","MDCA-U","MDI-U","AADP2-U","MDO-%",",MDE-%"| Export-Csv $outfile
         $csvfile = Import-Csv $outfile
         function get-licenses($tenantID, $bearerToken){
         $method = "GET"
@@ -100,23 +100,30 @@ $csvfileC = Import-Csv $outfileC
         
             $1 = get-usagestats -tenantID $cxtenant.OmsTenantId -bearerToken $bearer_token -et "Device" -startDate $startDate -enddate $currentUTCtime -workload "MDATP"
             $MDATPAverage = $1.Usage.MDATP |  ForEach-Object {$_.Usage} | Measure-Object -Average
-            $csvfileC.'MDE-U' = $csvfile.'MDE-U' = $MDATPAverage.Average
+            $MDEAvg = [math]::Round($MDATPAverage.Average)
+            $csvfileC.'MDE-U' = $csvfile.'MDE-U' = $MDEAvg
+            $licD1 = if ($E3 -gt $E5) { $E3  } else { $E5}
+            $csvfileC.'MDE-%' =  $csvfile.'MDE-%' = $MDEAvg / $licD1 
         
             $2 = get-usagestats -tenantID $cxtenant.OmsTenantId -bearerToken $bearer_token -et "User" -startDate $startDate -enddate $currentUTCtime -workload "OATP"
             $OATPAverage = $2.Usage.OATP |  ForEach-Object {$_.Usage} | Measure-Object -Average
-            $csvfileC.'MDO-U' = $csvfile.'MDO-U' = $OATPAverage.Average
+            $MDOAvg = [math]::Round($OATPAverage.Average)
+            $csvfileC.'MDO-U' = $csvfile.'MDO-U' = $MDOAvg
+            $licD1 = if ($E3 -gt $E5) { $E3  } else { $E5}
+            $csvfileC.'MDO-%' =  $csvfile.'MDO-%' = $MDEAvg / $licD1 
 
             $2 = get-usagestats -tenantID $cxtenant.OmsTenantId -bearerToken $bearer_token -et "User" -startDate $startDate -enddate $currentUTCtime -workload "MCAS"
-            $OATPAverage = $2.Usage.MCAS |  ForEach-Object {$_.Usage} | Measure-Object -Average
-            $csvfileC.'MDCA-U' = $csvfile.'MDCA-U' = $OATPAverage.Average
+            $MCASAverage = $2.Usage.MCAS |  ForEach-Object {$_.Usage} | Measure-Object -Average
+            $MCASAvg = [math]::Round($MCASAverage.Average)
+            $csvfileC.'MDCA-U' = $csvfile.'MDCA-U' = $MCASAvg
 
             $2 = get-usagestats -tenantID $cxtenant.OmsTenantId -bearerToken $bearer_token -et "User" -startDate $startDate -enddate $currentUTCtime -workload "AATP"
             $OATPAverage = $2.Usage.AATP |  ForEach-Object {$_.Usage} | Measure-Object -Average
-            $csvfileC.'MDI-U' = $csvfile.'MDI-U' = $OATPAverage.Average
+            $csvfileC.'MDI-U' = $csvfile.'MDI-U' = [math]::Round($OATPAverage.Average)
         
             $3 = get-usagestats -tenantID $cxtenant.OmsTenantId -bearerToken $bearer_token -et "User" -startDate $startDate -enddate $currentUTCtime -workload "AADP"
             $AADPAverage = $3.Usage.AADP |  ForEach-Object {$_.Usage} | Measure-Object -Average
-            $csvfileC.'AADP2-U' = $csvfile.'AADP2-U' = $AADPAverage.Average
+            $csvfileC.'AADP2-U' = $csvfile.'AADP2-U' = [math]::Round($AADPAverage.Average)
             
             $csvfile | Export-Csv $outfile -Append
             $csvfileC | Export-Csv $outfileC -Append
