@@ -72,9 +72,6 @@ foreach($id in $ids){
     Write-Host "TPID: $id------------------------------------------------------------"
     $et = $workload = ""
     $E3 = $E5 = $E5Sec = $AADP2 = $MDCA = $MDI = $MDATPAverage = $OATPAverage = $AADPAverage = 0
-    $outfile = "C:\temp\{0}-LynxReport{1}.csv" -f $id,$currentUTCtime.tostring("dd-MM-yyyy-hh-mm-ss")  
-    $newcsv = {} | Select-Object "OrgName","Customer","Tenant","ID","IsGov", "E3", "E5", "E5 Sec","MDCA","MDI","AADP2","MDO-U","MDE-U","MDCA-U","MDI-U","AADP2-U","MDO-P","MDE-P","MDI-P","MDCA-P","AADP2-P"| Export-Csv $outfile
-    $csvfile = Import-Csv $outfile
     #
     # Customer Name and Tenants
     $tenants = get-tenants -tpid $id -bearerToken $bearer_token
@@ -82,11 +79,12 @@ foreach($id in $ids){
     
     foreach ($cxtenant in $tenants.Results.Document){
         $csvfileC.TPID = $id
-        $csvfileC.Customer = $csvfile.Customer = $cxtenant.MSSalesTopParentOrgName
-        $csvfileC.Tenant = $csvfile.Tenant = $cxtenant.DefaultDomain
-        $csvfileC.OrgName = $csvfile.OrgName = $cxtenant.Name
-        $csvfileC.Id = $csvfile.Id = $cxtenant.OmsTenantId
-        $csvfileC.IsGov = $csvfile.IsGov = $cxtenant.IsGov
+        $csvfileC.Customer = $cxtenant.MSSalesTopParentOrgName
+        $csvfileC.Tenant = $cxtenant.DefaultDomain
+        $csvfileC.OrgName = $cxtenant.Name
+        $csvfileC.Id = $cxtenant.OmsTenantId
+        $csvfileC.IsGov = $cxtenant.IsGov
+
     
         Write-Host $cxtenant.Name
     
@@ -128,46 +126,42 @@ foreach($id in $ids){
         $1 = get-usagestats -tenantID $cxtenant.OmsTenantId -bearerToken $bearer_token -et "Device" -startDate $startDate -enddate $currentUTCtime -workload "MDATP"
         $MDATPAverage = $1.Usage.MDATP |  ForEach-Object {$_.Usage} | Measure-Object -Average
         $MDEAvg = [math]::Round($MDATPAverage.Average)
-        $csvfileC.'MDE-U' = $csvfile.'MDE-U' = $MDEAvg
+        $csvfileC.'MDE-U' = $MDEAvg
         $percentUsage = get-usagePercent -licNum $secLic -usageNum $MDEAvg
-        $csvfileC.'MDE-P' =  $csvfile.'MDE-P' = $percentUsage 
+        $csvfileC.'MDE-P' = $percentUsage 
     
         $2 = get-usagestats -tenantID $cxtenant.OmsTenantId -bearerToken $bearer_token -et "User" -startDate $startDate -enddate $currentUTCtime -workload "OATP"
         $OATPAverage = $2.Usage.OATP |  ForEach-Object {$_.Usage} | Measure-Object -Average
         $MDOAvg = [math]::Round($OATPAverage.Average)
-        $csvfileC.'MDO-U' = $csvfile.'MDO-U' = $MDOAvg
+        $csvfileC.'MDO-U' = $MDOAvg
         $percentUsage = get-usagePercent -licNum $secLic -usageNum $MDOAvg
-        $csvfileC.'MDO-P' =  $csvfile.'MDO-P' = $percentUsage 
+        $csvfileC.'MDO-P' = $percentUsage 
 
         $2 = get-usagestats -tenantID $cxtenant.OmsTenantId -bearerToken $bearer_token -et "User" -startDate $startDate -enddate $currentUTCtime -workload "MCAS"
         $MCASAverage = $2.Usage.MCAS |  ForEach-Object {$_.Usage} | Measure-Object -Average
         $MCASAvg = [math]::Round($MCASAverage.Average)
-        $csvfileC.'MDCA-U' = $csvfile.'MDCA-U' = $MCASAvg
+        $csvfileC.'MDCA-U' = $MCASAvg
         $percentUsage = get-usagePercent -licNum $secLic -usageNum $MCASAvg
-        $csvfileC.'MDCA-P' =  $csvfile.'MDCA-P' = $percentUsage 
+        $csvfileC.'MDCA-P' = $percentUsage 
 
         $2 = get-usagestats -tenantID $cxtenant.OmsTenantId -bearerToken $bearer_token -et "User" -startDate $startDate -enddate $currentUTCtime -workload "AATP"
         $AATPAverage = $2.Usage.AATP |  ForEach-Object {$_.Usage} | Measure-Object -Average
         $MDIAvg = [math]::Round($AATPAverage.Average)
-        $csvfileC.'MDI-U' = $csvfile.'MDI-U' = $MDIAvg
+        $csvfileC.'MDI-U' = $MDIAvg
         $percentUsage = get-usagePercent -licNum $mdiLic -usageNum $MDIAvg
-        $csvfileC.'MDI-P' =  $csvfile.'MDI-P' = $percentUsage 
+        $csvfileC.'MDI-P' = $percentUsage 
     
         $3 = get-usagestats -tenantID $cxtenant.OmsTenantId -bearerToken $bearer_token -et "User" -startDate $startDate -enddate $currentUTCtime -workload "AADP"
         $AADPAverage = $3.Usage.AADP |  ForEach-Object {$_.Usage} | Measure-Object -Average
         $AADPAvg = [math]::Round($AADPAverage.Average)
-        $csvfileC.'AADP2-U' = $csvfile.'AADP2-U' = $AADPAvg
+        $csvfileC.'AADP2-U' = $AADPAvg
         $percentUsage = get-usagePercent -licNum $secLic -usageNum $AADPAvg
-        $csvfileC.'AADP2-P' =  $csvfile.'AADP2-P' = $percentUsage 
+        $csvfileC.'AADP2-P' = $percentUsage 
         
-        $csvfile | Export-Csv $outfile -Append
         $csvfileC | Export-Csv $outfileC -Append
         $E3 = $E5 = $E5Sec = $secLic = $AADP2 = $MDCA = $MDI = $MDATPAverage = $OATPAverage = $AADPAverage = 0
     }
     
-    #Clean Up CSV
-    $cleanFile =  Import-Csv $outfile | Where-Object 'Customer' -ne ''
-    $cleanFile | Export-Csv $outfile
 
     $cleanFileC =  Import-Csv $outfileC | Where-Object 'Customer' -ne ''
     $cleanFileC | Export-Csv $outfileC
