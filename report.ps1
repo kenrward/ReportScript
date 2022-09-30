@@ -3,6 +3,7 @@ Param (
 [Parameter(Mandatory=$true)][string]$bearer_token
 )
 
+$targetMode = $true
 $ids = Get-Content $tpidInput
 $currentUTCtime = (Get-Date).ToUniversalTime()
 $startDate = $currentUTCtime.AddDays(-30)
@@ -158,7 +159,17 @@ foreach($id in $ids){
         $percentUsage = get-usagePercent -licNum $secLic -usageNum $AADPAvg
         $csvfileC.'AADP2-P' = $percentUsage 
         
-        $csvfileC | Export-Csv $outfileC -Append
+        if($targetMode){
+            if($E3 -eq 0 -and $E5 -eq 0){
+                $E3 = $E5 = $E5Sec = $secLic = $AADP2 = $MDCA = $MDI = $MDATPAverage = $OATPAverage = $AADPAverage = 0 
+                break
+            } else {
+                $csvfileC | Export-Csv $outfileC -Append 
+            }
+        } else {
+            $csvfileC | Export-Csv $outfileC -Append 
+        }
+        
         $E3 = $E5 = $E5Sec = $secLic = $AADP2 = $MDCA = $MDI = $MDATPAverage = $OATPAverage = $AADPAverage = 0
     }
     
