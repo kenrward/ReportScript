@@ -118,6 +118,12 @@ foreach($id in $ids){
         } else { 
             $secLic =$E5
         }
+
+        if ($MDI -gt $secLic) { 
+            $mdiLic = $MDI
+        } else { 
+            $mdiLic = $secLic
+        }
     
         $1 = get-usagestats -tenantID $cxtenant.OmsTenantId -bearerToken $bearer_token -et "Device" -startDate $startDate -enddate $currentUTCtime -workload "MDATP"
         $MDATPAverage = $1.Usage.MDATP |  ForEach-Object {$_.Usage} | Measure-Object -Average
@@ -144,12 +150,12 @@ foreach($id in $ids){
         $AATPAverage = $2.Usage.AATP |  ForEach-Object {$_.Usage} | Measure-Object -Average
         $MDIAvg = [math]::Round($AATPAverage.Average)
         $csvfileC.'MDI-U' = $csvfile.'MDI-U' = $MDIAvg
-        $percentUsage = get-usagePercent -licNum $secLic -usageNum $MDIAvg
+        $percentUsage = get-usagePercent -licNum $mdiLic -usageNum $MDIAvg
         $csvfileC.'MDI-P' =  $csvfile.'MDI-P' = $percentUsage 
     
         $3 = get-usagestats -tenantID $cxtenant.OmsTenantId -bearerToken $bearer_token -et "User" -startDate $startDate -enddate $currentUTCtime -workload "AADP"
         $AADPAverage = $3.Usage.AADP |  ForEach-Object {$_.Usage} | Measure-Object -Average
-        $AADPAvg = [math]::Round($AATPAverage.Average)
+        $AADPAvg = [math]::Round($AADPAverage.Average)
         $csvfileC.'AADP2-U' = $csvfile.'AADP2-U' = $AADPAvg
         $percentUsage = get-usagePercent -licNum $secLic -usageNum $AADPAvg
         $csvfileC.'AADP2-P' =  $csvfile.'AADP2-P' = $percentUsage 
