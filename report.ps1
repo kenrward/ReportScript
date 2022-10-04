@@ -105,12 +105,12 @@ foreach($id in $ids){
                     }
             }
         }
-        $csvfileC.E3 = $csvfile.E3 = $E3
-        $csvfileC.E5 = $csvfile.E5 = $E5
-        $csvfileC.'E5 Sec' = $csvfile.'E5 Sec' = $E5Sec
-        $csvfileC.MDCA = $csvfile.MDCA = $MDCA
-        $csvfileC.MDI = $csvfile.MDI = $MDI
-        $csvfileC.AADP2 = $csvfile.AADP2 = $AADP2
+        $csvfileC.E3 = $E3
+        $csvfileC.E5 = $E5
+        $csvfileC.'E5 Sec' = $E5Sec
+        $csvfileC.MDCA = $MDCA
+        $csvfileC.MDI = $MDI
+        $csvfileC.AADP2 = $AADP2
 
         if ($E5Sec -gt $E5) { 
             $secLic = $E5Sec
@@ -162,7 +162,6 @@ foreach($id in $ids){
         if($targetMode){
             if($E3 -eq 0 -and $E5 -eq 0){
                 $E3 = $E5 = $E5Sec = $secLic = $AADP2 = $MDCA = $MDI = $MDATPAverage = $OATPAverage = $AADPAverage = 0 
-                break
             } else {
                 $csvfileC | Export-Csv $outfileC -Append 
             }
