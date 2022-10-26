@@ -11,7 +11,7 @@ $ids = Get-Content $tpidInput
 $currentUTCtime = (Get-Date).ToUniversalTime()
 $startDate = $currentUTCtime.AddDays(-30)
 
-$outfileC = "C:\temp\Consolidated-LynxReport{0}.csv" -f $currentUTCtime.tostring("dd-MM-yyyy-hh-mm-ss")  
+$outfileC = "C:\temp\Consolidated-LynxReport-{0}.csv" -f $currentUTCtime.tostring("dd-MM-yyyy-hh-mm-ss")  
 $newcsv = {} | Select-Object "OrgName","TPID","Customer","Tenant","ID","IsGov", "E3", "E5", "E5 Sec","MDCA","MDI","AADP2","MDO-U","MDE-U","MDCA-U","MDI-U","AADP2-U","MDO-P","MDE-P","MDI-P","MDCA-P","AADP2-P"| Export-Csv $outfileC
 $csvfileC = Import-Csv $outfileC
 
