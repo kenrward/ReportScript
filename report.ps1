@@ -1,9 +1,12 @@
+# Requires Lynx All Access and Caretaker permissions to run properly
 Param (
 [Parameter(Mandatory=$true)][string]$tpidInput,
 [Parameter(Mandatory=$true)][string]$bearer_token
 )
 
-$targetMode = $true
+
+# Setting $tagetMode = $true will only return orgs that own at least one E3 or E5 license
+$targetMode = $flase
 $ids = Get-Content $tpidInput
 $currentUTCtime = (Get-Date).ToUniversalTime()
 $startDate = $currentUTCtime.AddDays(-30)

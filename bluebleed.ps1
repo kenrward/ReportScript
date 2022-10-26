@@ -3,13 +3,11 @@ Param (
 [Parameter(Mandatory=$true)][string]$bearer_token
 )
 
-$targetMode = $true
 $ids = Get-Content $tpidInput
 $currentUTCtime = (Get-Date).ToUniversalTime()
-$startDate = $currentUTCtime.AddDays(-30)
+$outfileC = "C:\temp\BlueBleed-{0}.csv" -f $currentUTCtime.tostring("dd-MM-yyyy-hh-mm-ss")  
 
-$outfileC = "C:\temp\BlueBleed-LynxReport-{0}.csv" -f $currentUTCtime.tostring("dd-MM-yyyy-hh-mm-ss")  
-$newcsv = {} | Select-Object "OrgName","TPID","Customer","Tenant","ID","IsGov","MC442057","MC442048"| Export-Csv $outfileC
+$newcsv = {} | Select-Object "TPID","Customer","Domain","Messages"| Export-Csv $outfileC
 $csvfileC = Import-Csv $outfileC
 
 function get-tenants($tpid, $bearerToken){
@@ -44,44 +42,29 @@ function get-messages ($tenantID, $bearerToken){
 
 }
 
+ "TPID,Customer,Domain,Messages" | Write-Host  
+
 foreach($id in $ids){
-    Write-Host "TPID: $id------------------------------------------------------------"
-    #
-    # Customer Name and Tenants
-    $tenants = get-tenants -tpid $id -bearerToken $bearer_token
-    
-    
+    $tpid=$id
+    $tenants = get-tenants -tpid $tpid -bearerToken $bearer_token
+     
     foreach ($cxtenant in $tenants.Results.Document){
         $messages = get-messages -tenantID $cxtenant.OmsTenantId -bearerToken $bearer_token
 
         foreach ($message in $messages){
-            if($message.Id -eq "MC442057" -or $message.Id -eq "MC442048"){
-                $csvfileC.TPID = $id
-                $csvfileC.Customer = $cxtenant.MSSalesTopParentOrgName
-                $csvfileC.Tenant = $cxtenant.DefaultDomain
-                $csvfileC.OrgName = $cxtenant.Name
-                $csvfileC.Id = $cxtenant.OmsTenantId
-                $csvfileC.IsGov = $cxtenant.IsGov
-                Write-Host $cxtenant.Name
-                Write-Host $cxtenant.DefaultDomain
-                Write-Host $message.Id
-                if($message.Id -eq "MC442057"){
-                    $csvfileC.MC442057 = "X"
-                }
-                if($message.Id -eq "MC442048"){
-                    $csvfileC.MC442048 = "X"
-                }
-            }
+            if(($message.Id -eq "MC442057") -or ($message.Id -eq "MC442048")){
+
+                "{0},{1},{2},{3}" -f $tpid,$cxtenant.Name,$cxtenant.DefaultDomain,$message.Id | Write-Host 
+                $csvfileC.TPID = $tpid
+                $csvfileC.Customer = $cxtenant.Name
+                $csvfileC.Domain = $cxtenant.DefaultDomain
+                $csvfileC.Messages = $message.Id
+                $csvfileC | Export-Csv $outfileC -Append 
+            }  
         }
-
-    $csvfileC | Export-Csv $outfileC -Append 
-
     }
-    
-
     $cleanFileC =  Import-Csv $outfileC | Where-Object 'Customer' -ne ''
     $cleanFileC | Export-Csv $outfileC
-    
 }
 
 
