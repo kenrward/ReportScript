@@ -6,6 +6,7 @@ Param (
 $ids = Get-Content $tpidInput
 $currentUTCtime = (Get-Date).ToUniversalTime()
 $outfileC = "C:\temp\BlueBleed-{0}.csv" -f $currentUTCtime.tostring("dd-MM-yyyy-hh-mm-ss")  
+$bbMCids="MC442057","MC442048","MC451887","MC451892","MC451903"
 
 $newcsv = {} | Select-Object "TPID","Customer","Domain","Messages"| Export-Csv $outfileC
 $csvfileC = Import-Csv $outfileC
@@ -52,8 +53,7 @@ foreach($id in $ids){
         $messages = get-messages -tenantID $cxtenant.OmsTenantId -bearerToken $bearer_token
 
         foreach ($message in $messages){
-            if(($message.Id -eq "MC442057") -or ($message.Id -eq "MC442048")){
-
+            if($bbMCids -contains $message.Id){
                 "{0},{1},{2},{3}" -f $tpid,$cxtenant.Name,$cxtenant.DefaultDomain,$message.Id | Write-Host 
                 $csvfileC.TPID = $tpid
                 $csvfileC.Customer = $cxtenant.Name
