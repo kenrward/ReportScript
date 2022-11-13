@@ -12,7 +12,7 @@ $currentUTCtime = (Get-Date).ToUniversalTime()
 $startDate = $currentUTCtime.AddDays(-30)
 
 $outfileC = "C:\temp\Consolidated-LynxReport-{0}.csv" -f $currentUTCtime.tostring("dd-MM-yyyy-hh-mm-ss")  
-$newcsv = {} | Select-Object "OrgName","TPID","Customer","Tenant","ID","IsGov", "E3", "E5", "E5 Sec","MDCA","MDI","AADP2","MDO-U","MDE-U","MDCA-U","MDI-U","AADP2-U","MDO-P","MDE-P","MDI-P","MDCA-P","AADP2-P"| Export-Csv $outfileC
+$newcsv = {} | Select-Object "OrgName","TPID","Customer","Tenant","ID","IsGov", "E3", "E5", "E5 Sec","MDCA","MDI","AADP2","CA-U","MDO-U","MDE-U","MDCA-U","MDI-U","AADP2-U","MDO-P","MDE-P","MDI-P","MDCA-P","AADP2-P"| Export-Csv $outfileC
 $csvfileC = Import-Csv $outfileC
 
 function get-licenses($tenantID, $bearerToken){
@@ -47,6 +47,22 @@ function get-usagestats ($tenantID, $bearerToken, $workload, $et, $startDate, $e
     $headers = @{Authorization = "Bearer $bearerToken"} 
     
     $url = "https://lynx.office.net/api/ApplicationUsage/AllUpHistory?omsTenantId={0}&workloads%5B0%5D={1}&startDate={2}&endDate={3}&usageType=RL28&entityType={4}" -f $tenantID,$workload,$startDate,$enddate,$et
+
+    try{
+        $results = Invoke-RestMethod -Uri $url -Method $method -Headers $headers -ContentType "application/json" -UseBasicParsing 
+        return $results
+    } catch {
+        "Error pulling {0} Data, could be no vaild results: {1}" -f $workload,$resLic.statuscode | Write-Host 
+        return $null
+    }
+
+}
+
+function get-featurestats ($tenantID, $bearerToken, $workload, $et, $startDate, $enddate){
+    $method = "GET"
+    $headers = @{Authorization = "Bearer $bearerToken"} 
+    
+    $url = "https://lynx.office.net/api/ApplicationUsage/History?omsTenantId={0}&workloads%5B0%5D={1}&startDate={2}&endDate={3}&usageType=RL28&entityType={4}" -f $tenantID,$workload,$startDate,$enddate,$et
 
     try{
         $results = Invoke-RestMethod -Uri $url -Method $method -Headers $headers -ContentType "application/json" -UseBasicParsing 
@@ -161,7 +177,12 @@ foreach($id in $ids){
         $csvfileC.'AADP2-U' = $AADPAvg
         $percentUsage = get-usagePercent -licNum $secLic -usageNum $AADPAvg
         $csvfileC.'AADP2-P' = $percentUsage 
-        
+
+        $4 = get-featurestats -tenantID $cxtenant.OmsTenantId -bearerToken $bearer_token -et "User" -startDate $startDate -enddate $currentUTCtime -workload "AADP"
+        $3PCA_Average = $4.Usage.AADP.Data.Feature | ForEach-Object {$_.ThirdParty} | Measure-Object -Average
+        $3PCA_AVg =  [math]::Round($3PCA_Average.Average)
+        $csvfileC.'CA-U' = $3PCA_AVg
+
         if($targetMode){
             if($E3 -eq 0 -and $E5 -eq 0){
                 $E3 = $E5 = $E5Sec = $secLic = $AADP2 = $MDCA = $MDI = $MDATPAverage = $OATPAverage = $AADPAverage = 0 
