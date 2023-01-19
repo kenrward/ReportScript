@@ -5,9 +5,9 @@
             "name": "Reporter",
             "type": "PowerShell",
             "request": "launch",
-            "script": "H:\\_git\\ReportScript\\report.ps1",
+            "script": "C:\\Downloads\\ReportScript\\report.ps1",
             "cwd": "${workspaceFolder}",
-            "args": ["-tpidInput \"H:\\_git\\ReportScript\\.vscode\\ids.txt\" -bearer_token \"INSERT_BEARER_TOKEN_FROM_BROWSER\""]
+            "args": ["-tpidInput \"C:\\Downloads\\ReportScript\\.vscode\\ids.txt\" -bearer_token \"INSERT_BEARER_TOKEN_FROM_BROWSER\""]
         }
     ]
 }
