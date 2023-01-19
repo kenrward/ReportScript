@@ -1,0 +1,13 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Reporter",
+            "type": "PowerShell",
+            "request": "launch",
+            "script": "H:\\_git\\ReportScript\\report.ps1",
+            "cwd": "${workspaceFolder}",
+            "args": ["-tpidInput \"H:\\_git\\ReportScript\\.vscode\\ids.txt\" -bearer_token \"INSERT_BEARER_TOKEN_FROM_BROWSER\""]
+        }
+    ]
+}
